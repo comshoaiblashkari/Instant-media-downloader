@@ -1,3 +1,19 @@
-"externally_connectable": {
-  "matches": ["https://your-website-domain.com/*", "http://localhost:*/*"]
+{
+  "manifest_version": 3,
+  "name": "Neon Instant Media Downloader",
+  "version": "1.0",
+  "description": "Chrome extension controlled by external web controller.",
+  "permissions": [
+    "downloads"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "externally_connectable": {
+    "matches": [
+      "https://*.onrender.com/*",
+      "http://localhost/*"
+    ]
+  }
 }
+
