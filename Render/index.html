@@ -1,132 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Neon Downloader Controller</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-    body {
-      background-color: #080911;
-      color: #fff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-    .card {
-      background: rgba(18, 20, 36, 0.9);
-      border: 2px solid #00f0ff;
-      box-shadow: 0 0 25px #00f0ff;
-      border-radius: 16px;
-      padding: 35px;
-      width: 420px;
-      text-align: center;
-    }
-    h1 {
-      font-size: 1.8rem;
-      color: #ff007f;
-      text-shadow: 0 0 12px #ff007f;
-      margin-bottom: 20px;
-    }
-    input {
-      width: 100%;
-      padding: 14px;
-      border: 2px solid #7000ff;
-      border-radius: 8px;
-      background: #101222;
-      color: #00f0ff;
-      font-size: 0.95rem;
-      outline: none;
-      margin-bottom: 15px;
-      box-shadow: 0 0 8px rgba(112, 0, 255, 0.4);
-    }
-    input:focus { border-color: #ff007f; box-shadow: 0 0 15px #ff007f; }
-    button {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 8px;
-      background: linear-gradient(90deg, #ff007f, #7000ff);
-      color: #fff;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 0 15px #ff007f;
-      text-transform: uppercase;
-    }
-    #status {
-      margin-top: 18px;
-      font-size: 0.9rem;
-      font-weight: bold;
-      min-height: 20px;
-    }
-  </style>
-</head>
-<body>
+<script>
+  const RENDER_BACKEND_URL = "https://instant-youtube-downloader.onrender.com";
 
-  <div class="card">
-    <h1>⚡ Fast Neon Downloader</h1>
-    <input type="text" id="videoUrl" placeholder="Paste YouTube link here..." />
-    <button id="downloadBtn">Start Fast Download</button>
-    <div id="status"></div>
-  </div>
+  document.getElementById('downloadBtn').addEventListener('click', async () => {
+    const url = document.getElementById('videoUrl').value.trim();
+    const status = document.getElementById('status');
 
-  <script>
-    const RENDER_BACKEND_URL = "https://your-render-app-name.onrender.com"; // Change to your Render URL
-    const EXTENSION_ID = "YOUR_EXTENSION_ID_HERE"; // Change to your Extension ID
+    if (!url) {
+      status.style.color = "#ff007f";
+      status.innerText = "Please enter a YouTube link!";
+      return;
+    }
 
-    document.getElementById('downloadBtn').addEventListener('click', async () => {
-      const url = document.getElementById('videoUrl').value.trim();
-      const status = document.getElementById('status');
+    status.style.color = "#00f0ff";
+    status.innerText = "⚡ Extracting video link...";
 
-      if (!url) {
-        status.style.color = "#ff007f";
-        status.innerText = "Please enter a YouTube link!";
-        return;
+    try {
+      const response = await fetch(`${RENDER_BACKEND_URL}/api/get-download-link`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        throw new Error(data.error || "Failed to parse YouTube link.");
       }
 
-      status.style.color = "#00f0ff";
-      status.innerText = "⚡ Extracting direct stream link...";
+      status.style.color = "#39ff14";
+      status.innerText = "✅ Download starting!";
 
-      try {
-        // Fetch fast direct link from backend
-        const response = await fetch(`${RENDER_BACKEND_URL}/api/get-download-link`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url })
-        });
+      // Open YouTube direct video stream URL in a new tab to trigger browser download
+      window.open(data.directUrl, '_blank');
 
-        const data = await response.json();
+    } catch (err) {
+      status.style.color = "#ff007f";
+      status.innerText = "Error: " + err.message;
+    }
+  });
+</script>
 
-        if (!response.ok || data.error) {
-          throw new Error(data.error || "Failed to extract video.");
-        }
-
-        status.style.color = "#39ff14";
-        status.innerText = "🚀 Direct link found! Sending to Extension...";
-
-        // Send direct link to Chrome Extension
-        if (typeof chrome !== "undefined" && chrome.runtime) {
-          chrome.runtime.sendMessage(EXTENSION_ID, {
-            action: "DOWNLOAD_DIRECT",
-            url: data.directUrl,
-            filename: `${data.title}.mp4`
-          }, (res) => {
-            if (chrome.runtime.lastError) {
-              status.style.color = "#ff007f";
-              status.innerText = "Extension connection failed! Check ID.";
-            } else {
-              status.style.color = "#39ff14";
-              status.innerText = "✅ High-speed download started!";
-            }
-          });
-        }
-      } catch (err) {
-        status.style.color = "#ff007f";
-        status.innerText = "Error: " + err.message;
-      }
-    });
-  </script>
-</body>
-</html>
 
