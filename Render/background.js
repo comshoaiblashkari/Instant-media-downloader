@@ -1,19 +1,17 @@
 chrome.runtime.onMessageExternal.addListener((request, sender, sendResponse) => {
-  if (request.action === "DOWNLOAD_VIDEO" && request.url) {
-    console.log("Received download request for:", request.url);
-
-    // Trigger Chrome's built-in download manager
+  if (request.action === "DOWNLOAD_DIRECT" && request.url) {
     chrome.downloads.download({
       url: request.url,
-      filename: "YouTube_Video.mp4"
+      filename: request.filename || "Video.mp4",
+      saveAs: false
     }, (downloadId) => {
       if (chrome.runtime.lastError) {
-        sendResponse({ status: "error", message: chrome.runtime.lastError.message });
+        sendResponse({ status: "error", error: chrome.runtime.lastError.message });
       } else {
-        sendResponse({ status: "success", downloadId: downloadId });
+        sendResponse({ status: "success", downloadId });
       }
     });
-
-    return true; // Keep channel open for async response
+    return true;
   }
 });
+
