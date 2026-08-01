@@ -3,15 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>⚡ Neon Ultra-Fast Downloader</title>
+  <title>⚡ Neon Fast Video & Audio Mixer</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
     body {
       background-color: #080911;
       color: #fff;
@@ -19,30 +13,26 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      overflow: hidden;
+      padding: 20px;
     }
-
-    .container {
+    .card {
       background: rgba(18, 20, 36, 0.95);
       border: 2px solid #00f0ff;
-      box-shadow: 0 0 25px #00f0ff, inset 0 0 15px rgba(0, 240, 255, 0.2);
+      box-shadow: 0 0 25px #00f0ff;
       border-radius: 16px;
-      padding: 40px;
-      width: 90%;
-      max-width: 440px;
+      padding: 30px;
+      width: 100%;
+      max-width: 480px;
       text-align: center;
     }
-
     h1 {
       font-size: 1.8rem;
       color: #ff007f;
-      text-shadow: 0 0 12px #ff007f, 0 0 22px #ff007f;
-      margin-bottom: 25px;
+      text-shadow: 0 0 12px #ff007f;
+      margin-bottom: 20px;
       text-transform: uppercase;
-      letter-spacing: 1.5px;
     }
-
-    input[type="text"] {
+    input {
       width: 100%;
       padding: 14px;
       border: 2px solid #7000ff;
@@ -51,16 +41,9 @@
       color: #00f0ff;
       font-size: 0.95rem;
       outline: none;
-      margin-bottom: 18px;
-      box-shadow: 0 0 8px rgba(112, 0, 255, 0.4);
-      transition: all 0.3s ease;
+      margin-bottom: 15px;
     }
-
-    input[type="text"]:focus {
-      border-color: #ff007f;
-      box-shadow: 0 0 15px #ff007f;
-    }
-
+    input:focus { border-color: #ff007f; box-shadow: 0 0 15px #ff007f; }
     button {
       width: 100%;
       padding: 14px;
@@ -69,74 +52,73 @@
       background: linear-gradient(90deg, #ff007f, #7000ff);
       color: #fff;
       font-weight: bold;
-      font-size: 1rem;
       cursor: pointer;
       box-shadow: 0 0 15px #ff007f;
-      transition: transform 0.2s, box-shadow 0.2s;
       text-transform: uppercase;
     }
-
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 0 25px #ff007f, 0 0 10px #00f0ff;
-    }
-
     #status {
-      margin-top: 20px;
-      font-size: 0.95rem;
+      margin-top: 15px;
+      font-size: 0.9rem;
       font-weight: bold;
-      min-height: 24px;
-      word-break: break-word;
+      min-height: 20px;
+    }
+    #downloadLink {
+      display: none;
+      margin-top: 20px;
+      padding: 12px;
+      background: #39ff14;
+      color: #000;
+      font-weight: bold;
+      text-decoration: none;
+      border-radius: 8px;
+      box-shadow: 0 0 15px #39ff14;
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <h1>⚡ Fast Neon Downloader</h1>
-    <input type="text" id="videoUrl" placeholder="Paste YouTube Link Here..." />
-    <button id="downloadBtn">Download Video</button>
+  <div class="card">
+    <h1>⚡ Fast Media Mixer</h1>
+    <input type="text" id="videoUrl" placeholder="Paste YouTube link..." />
+    <button id="processBtn">Process Video & Audio</button>
     <div id="status"></div>
+    <a id="downloadLink" href="#" target="_blank">📥 Download Merged HD Video</a>
   </div>
 
   <script>
-    document.getElementById('downloadBtn').addEventListener('click', async () => {
+    document.getElementById('processBtn').addEventListener('click', async () => {
       const url = document.getElementById('videoUrl').value.trim();
       const status = document.getElementById('status');
+      const downloadLink = document.getElementById('downloadLink');
 
       if (!url) {
         status.style.color = "#ff007f";
-        status.innerText = "Please paste a YouTube link!";
+        status.innerText = "Please paste a link!";
         return;
       }
 
       status.style.color = "#00f0ff";
-      status.innerText = "⚡ Fetching direct video stream...";
+      status.innerText = "⚡ Fetching HD video & mixing audio...";
+      downloadLink.style.display = "none";
 
       try {
-        // High-speed API endpoint that bypasses YouTube data-center blocks
-        const response = await fetch("https://co.wuk.sh/api/json", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          },
-          body: JSON.stringify({
-            url: url,
-            vQuality: "720"
-          })
+        const response = await fetch('/api/process-video', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
         });
 
         const data = await response.json();
 
-        if (data.url) {
-          status.style.color = "#39ff14";
-          status.innerText = "🚀 Direct Download Started!";
-          // Triggers immediate browser download!
-          window.location.href = data.url;
-        } else {
-          throw new Error("Could not extract stream. Please check link.");
+        if (!response.ok || data.error) {
+          throw new Error(data.error || "Processing failed");
         }
+
+        status.style.color = "#39ff14";
+        status.innerText = "✅ Video & Audio merged successfully!";
+        
+        downloadLink.href = data.downloadUrl;
+        downloadLink.style.display = "inline-block";
 
       } catch (err) {
         status.style.color = "#ff007f";
@@ -146,3 +128,4 @@
   </script>
 </body>
 </html>
+
